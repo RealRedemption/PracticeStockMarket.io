@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockQuest - Advanced Market Simulation</title>
+    <title>Volatility Stocks - Real Market Simulation</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -17,6 +17,8 @@
             --text: #e5e7eb;
             --text-secondary: #9ca3af;
             --border: #374151;
+            --crash: #ff5252;
+            --rally: #69f0ae;
         }
 
         * {
@@ -102,6 +104,26 @@
             color: var(--danger);
         }
 
+        .crash {
+            color: var(--crash);
+            animation: flash 0.5s infinite;
+        }
+
+        .rally {
+            color: var(--rally);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .game-area {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -120,7 +142,7 @@
             padding: 15px;
             border-bottom: 1px solid var(--border);
             align-items: center;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
         }
 
         .stock-item:hover {
@@ -338,6 +360,7 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .time-btn {
@@ -352,6 +375,33 @@
 
         .time-btn.active {
             background-color: var(--secondary);
+        }
+
+        .risk-warning {
+            background-color: rgba(255, 23, 68, 0.1);
+            border-left: 3px solid var(--danger);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .event-banner {
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .event-bear {
+            background-color: rgba(255, 23, 68, 0.2);
+            border: 1px solid var(--danger);
+        }
+
+        .event-bull {
+            background-color: rgba(0, 200, 83, 0.2);
+            border: 1px solid var(--success);
         }
 
         @media (max-width: 1024px) {
@@ -377,18 +427,28 @@
             .stats {
                 flex-direction: column;
             }
+            
+            .time-controls {
+                flex-wrap: wrap;
+            }
+            
+            .time-btn {
+                flex: 1 0 45%;
+            }
         }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>StockQuest Pro</h1>
-            <p class="subtitle">Advanced Stock Market Simulation</p>
+            <h1>Volatility Stocks</h1>
+            <p class="subtitle">High-Risk Market Simulation</p>
         </div>
     </header>
 
     <div class="container">
+        <div id="event-banner" class="event-banner" style="display: none;"></div>
+        
         <div class="dashboard">
             <div class="card">
                 <h2>Your Portfolio</h2>
@@ -436,16 +496,16 @@
                     </div>
                     <div class="indicator">
                         <div class="stat-label">Trend</div>
-                        <div class="stat-value" id="market-trend">Bullish</div>
+                        <div class="stat-value" id="market-trend">Neutral</div>
                         <div class="progress-bar">
-                            <div class="progress positive" id="trend-progress" style="width: 70%;"></div>
+                            <div class="progress" id="trend-progress" style="width: 50%;"></div>
                         </div>
                     </div>
                     <div class="indicator">
-                        <div class="stat-label">Economy</div>
-                        <div class="stat-value" id="economy-state">Growing</div>
+                        <div class="stat-label">Risk Level</div>
+                        <div class="stat-value" id="risk-level">Medium</div>
                         <div class="progress-bar">
-                            <div class="progress positive" id="economy-progress" style="width: 80%;"></div>
+                            <div class="progress" id="risk-progress" style="width: 50%;"></div>
                         </div>
                     </div>
                 </div>
@@ -456,7 +516,7 @@
             <button class="time-btn active" data-speed="1">1x Speed</button>
             <button class="time-btn" data-speed="2">2x Speed</button>
             <button class="time-btn" data-speed="5">5x Speed</button>
-            <button class="time-btn" data-speed="10">10x Speed</button>
+            <button class="time-btn" data-speed="0">Pause</button>
             <button id="next-day-btn">Next Day →</button>
         </div>
 
@@ -488,6 +548,11 @@
                         <!-- Portfolio items will be added here dynamically -->
                     </div>
                 </div>
+                
+                <div class="risk-warning">
+                    <h3>⚠️ High Risk Warning</h3>
+                    <p>This market simulation features extreme volatility. Stocks can plummet or spike suddenly based on random events. Invest carefully!</p>
+                </div>
             </div>
 
             <div class="sidebar">
@@ -499,16 +564,16 @@
                 </div>
 
                 <div class="card tip">
-                    <h3>💡 Advanced Investing Tip</h3>
-                    <p id="current-tip">Monitor market indicators like volatility and economic trends to time your investments better. Consider both technical and fundamental analysis.</p>
+                    <h3>💡 Risk Management Tip</h3>
+                    <p id="current-tip">In highly volatile markets, consider setting stop-loss orders to limit potential losses from sudden price drops.</p>
                 </div>
 
                 <div class="card">
-                    <h2>Stock Analysis</h2>
+                    <h2>Market Analysis</h2>
                     <div class="chart-container">
-                        <canvas id="analysis-chart"></canvas>
+                        <canvas id="market-chart"></canvas>
                     </div>
-                    <p id="analysis-text">Select a stock to view detailed analysis</p>
+                    <p id="analysis-text">Overall market trend visualization</p>
                 </div>
             </div>
         </div>
@@ -533,6 +598,11 @@
                 
                 <div class="chart-container">
                     <canvas id="modal-chart"></canvas>
+                </div>
+                
+                <div id="risk-indicator">
+                    <h3>Risk Assessment</h3>
+                    <p id="risk-assessment">Calculating...</p>
                 </div>
                 
                 <button id="modal-confirm-btn">Confirm Purchase</button>
@@ -568,8 +638,8 @@
                             <div class="stat-value" id="info-stock-volatility"></div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">Market Cap</div>
-                            <div class="stat-value" id="info-stock-cap"></div>
+                            <div class="stat-label">Risk Level</div>
+                            <div class="stat-value" id="info-stock-risk"></div>
                         </div>
                     </div>
                 </div>
@@ -600,7 +670,7 @@
     </div>
 
     <script>
-        // Game state with more realistic data
+        // Game state with extreme volatility
         const gameState = {
             day: 1,
             cash: 10000,
@@ -612,130 +682,147 @@
                     name: "Tech Innovators Inc", 
                     price: 100.00, 
                     previousPrice: 100.00,
-                    volatility: 0.04, 
+                    baseVolatility: 0.06, 
+                    currentVolatility: 0.06,
                     sector: "Technology",
                     marketCap: "450B",
-                    trend: "bullish",
+                    trend: "neutral",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "High"
                 },
                 { 
                     symbol: "GREEN", 
                     name: "Green Energy Solutions", 
                     price: 75.50, 
                     previousPrice: 75.50,
-                    volatility: 0.06, 
+                    baseVolatility: 0.08, 
+                    currentVolatility: 0.08,
                     sector: "Energy",
                     marketCap: "85B",
                     trend: "volatile",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "Very High"
                 },
                 { 
                     symbol: "MEDI", 
                     name: "MediHealth Pharmaceuticals", 
                     price: 120.75, 
                     previousPrice: 120.75,
-                    volatility: 0.03, 
+                    baseVolatility: 0.05, 
+                    currentVolatility: 0.05,
                     sector: "Healthcare",
                     marketCap: "210B",
                     trend: "stable",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "Medium"
                 },
                 { 
                     symbol: "AUTO", 
                     name: "AutoDrive Motors", 
                     price: 88.25, 
                     previousPrice: 88.25,
-                    volatility: 0.05, 
+                    baseVolatility: 0.07, 
+                    currentVolatility: 0.07,
                     sector: "Automotive",
                     marketCap: "75B",
                     trend: "bullish",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "High"
                 },
                 { 
                     symbol: "RETL", 
                     name: "Retail Giants Corp", 
                     price: 65.80, 
                     previousPrice: 65.80,
-                    volatility: 0.07, 
+                    baseVolatility: 0.09, 
+                    currentVolatility: 0.09,
                     sector: "Retail",
                     marketCap: "120B",
                     trend: "bearish",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "Very High"
                 },
                 { 
                     symbol: "BANK", 
                     name: "Global Bank Group", 
                     price: 42.30, 
                     previousPrice: 42.30,
-                    volatility: 0.04, 
+                    baseVolatility: 0.05, 
+                    currentVolatility: 0.05,
                     sector: "Financial",
                     marketCap: "180B",
                     trend: "stable",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "Medium"
                 },
                 { 
                     symbol: "OIL", 
                     name: "PetroEnergy Ltd", 
                     price: 55.60, 
                     previousPrice: 55.60,
-                    volatility: 0.08, 
+                    baseVolatility: 0.10, 
+                    currentVolatility: 0.10,
                     sector: "Energy",
                     marketCap: "65B",
                     trend: "volatile",
                     history: [],
-                    news: []
+                    news: [],
+                    risk: "Extreme"
                 }
             ],
             portfolio: {},
             history: {},
-            marketTrend: "bullish",
-            economyState: "growing",
-            volatility: 0.05,
+            marketTrend: "neutral",
+            economyState: "stable",
+            volatility: 0.07,
+            riskLevel: "Medium",
             news: [],
             timeSpeed: 1,
-            timeInterval: null
+            timeInterval: null,
+            marketHistory: [],
+            eventActive: false,
+            eventType: null,
+            eventDuration: 0
         };
 
-        // More comprehensive investment tips
+        // More comprehensive investment tips focused on risk
         const tips = [
-            "Diversify your investments across different sectors to reduce risk.",
-            "Invest for the long term rather than trying to time the market.",
-            "Research companies before investing - understand what they do and their financial health.",
-            "Avoid making emotional decisions when the market is volatile.",
-            "Consider dollar-cost averaging - investing fixed amounts regularly.",
-            "Keep an eye on fees and commissions - they can eat into your returns.",
-            "Rebalance your portfolio periodically to maintain your target allocation.",
-            "Don't put all your money in one stock, no matter how confident you are.",
-            "Have an emergency fund before investing in stocks.",
-            "Understand the difference between investing and speculating.",
-            "Pay attention to market trends and economic indicators.",
-            "Consider both technical and fundamental analysis for better decisions.",
-            "Set stop-loss orders to limit potential losses in volatile markets.",
-            "Keep a trading journal to learn from your successes and mistakes."
+            "In volatile markets, never invest more than you can afford to lose.",
+            "Consider using stop-loss orders to automatically sell if a stock drops below a certain price.",
+            "Diversification is even more important in high-risk markets.",
+            "Avoid emotional trading - stick to your strategy even when markets are chaotic.",
+            "High volatility means high potential returns but also high potential losses.",
+            "Consider keeping a portion of your portfolio in cash to take advantage of market dips.",
+            "Research shows that timing the market is extremely difficult, even for professionals.",
+            "The biggest losses often come from panic selling during market crashes.",
+            "Consider using limit orders instead of market orders to control your entry and exit points.",
+            "In turbulent markets, assets can become correlated and all move down together.",
+            "Be aware of confirmation bias - don't only seek information that supports your existing views.",
+            "Document your trades and learn from both successes and failures."
         ];
 
-        // Market news events that affect stock prices
+        // Market news events that affect stock prices - with more extreme effects
         const newsEvents = [
-            { text: "Federal Reserve hints at interest rate changes", impact: "market", effect: 0.03 },
-            { text: "Tech sector shows strong earnings growth", impact: "TECH", effect: 0.06 },
-            { text: "Oil prices volatile amid geopolitical tensions", impact: "OIL", effect: 0.08 },
-            { text: "Healthcare legislation passes, affecting drug prices", impact: "MEDI", effect: -0.04 },
-            { text: "Retail sales report stronger than expected", impact: "RETL", effect: 0.05 },
-            { text: "Auto industry faces supply chain challenges", impact: "AUTO", effect: -0.05 },
-            { text: "Renewable energy subsidies announced by government", impact: "GREEN", effect: 0.07 },
-            { text: "Banking sector regulations eased", impact: "BANK", effect: 0.04 },
-            { text: "Economic growth slower than projected", impact: "market", effect: -0.04 },
-            { text: "Inflation numbers higher than expected", impact: "market", effect: -0.05 },
-            { text: "Unemployment rate drops to record low", impact: "market", effect: 0.04 },
-            { text: "New technology breakthrough in battery storage", impact: ["TECH", "GREEN"], effect: 0.07 },
-            { text: "Consumer confidence index reaches new high", impact: "market", effect: 0.03 },
-            { text: "International trade tensions escalate", impact: "market", effect: -0.05 }
+            { text: "Federal Reserve emergency interest rate hike", impact: "market", effect: -0.15, type: "bear" },
+            { text: "Tech sector crash amid valuation concerns", impact: "TECH", effect: -0.25, type: "bear" },
+            { text: "Oil prices crash due to oversupply", impact: "OIL", effect: -0.35, type: "bear" },
+            { text: "Banking crisis fears spread through market", impact: "BANK", effect: -0.20, type: "bear" },
+            { text: "Retail bankruptcy wave announced", impact: "RETL", effect: -0.30, type: "bear" },
+            { text: "Revolutionary battery technology announced", impact: ["TECH", "GREEN"], effect: 0.40, type: "bull" },
+            { text: "FDA fast-tracks breakthrough drug", impact: "MEDI", effect: 0.50, type: "bull" },
+            { text: "Autonomous vehicle regulations eased", impact: "AUTO", effect: 0.35, type: "bull" },
+            { text: "Market circuit breakers triggered amid crash", impact: "market", effect: -0.20, type: "bear" },
+            { text: "Economic stimulus package announced", impact: "market", effect: 0.18, type: "bull" },
+            { text: "Company scandal: CEO resigns amid fraud allegations", impact: "random", effect: -0.45, type: "bear" },
+            { text: "Short squeeze causes massive rally", impact: "random", effect: 0.60, type: "bull" },
+            { text: "Cybersecurity breach affects millions", impact: "random", effect: -0.30, type: "bear" },
+            { text: "Hostile takeover bid announced", impact: "random", effect: 0.40, type: "bull" }
         ];
 
         // Initialize the game
@@ -743,15 +830,25 @@
             // Initialize history for each stock
             gameState.stocks.forEach(stock => {
                 gameState.history[stock.symbol] = [stock.price];
-                stock.history = Array(30).fill(null).map(() => stock.price * (0.95 + 0.1 * Math.random()));
-                stock.history[29] = stock.price;
+                // Generate more volatile history
+                stock.history = Array(30).fill(null).map((_, i) => {
+                    if (i === 0) return stock.price;
+                    const change = (Math.random() * 0.1) - 0.05;
+                    return Math.max(1, stock.history[i-1] * (1 + change));
+                });
             });
+            
+            // Initialize market history
+            gameState.marketHistory = Array(30).fill(100);
             
             // Generate initial news
             generateNews();
             
             // Render initial stocks
             renderStocks();
+            
+            // Create market chart
+            createMarketChart();
             
             // Update UI
             updateUI();
@@ -786,7 +883,10 @@
             });
             
             // Shares input
-            document.getElementById('shares-input').addEventListener('input', updateTotalCost);
+            document.getElementById('shares-input').addEventListener('input', function() {
+                updateTotalCost();
+                updateRiskAssessment();
+            });
             
             // Confirm trade button
             document.getElementById('modal-confirm-btn').addEventListener('click', executeTrade);
@@ -833,25 +933,38 @@
         function nextDay() {
             gameState.day++;
             
+            // Handle event duration
+            if (gameState.eventActive) {
+                gameState.eventDuration--;
+                if (gameState.eventDuration <= 0) {
+                    gameState.eventActive = false;
+                    document.getElementById('event-banner').style.display = 'none';
+                }
+            } else if (Math.random() < 0.15) {
+                // 15% chance of an event occurring
+                triggerRandomEvent();
+            }
+            
             // Update market conditions
             updateMarketConditions();
             
-            // Update stock prices with more realistic algorithm
+            // Update stock prices with more realistic and volatile algorithm
             gameState.stocks.forEach(stock => {
                 const previousPrice = stock.price;
                 
-                // Base random change based on volatility
-                let changePercent = (Math.random() * 2 - 1) * stock.volatility;
+                // Base random change based on volatility - much more volatile
+                let changePercent = (Math.random() * 2 - 1) * stock.currentVolatility;
                 
                 // Apply market trend influence
-                changePercent += (gameState.marketTrend === "bullish" ? 0.01 : -0.01);
+                changePercent += (gameState.marketTrend === "bullish" ? 0.015 : -0.015);
                 
                 // Apply stock-specific trend
-                if (stock.trend === "bullish") changePercent += 0.005;
-                if (stock.trend === "bearish") changePercent -= 0.005;
+                if (stock.trend === "bullish") changePercent += 0.01;
+                if (stock.trend === "bearish") changePercent -= 0.01;
+                if (stock.trend === "volatile") changePercent *= 1.5;
                 
                 // Apply economic state influence
-                changePercent += (gameState.economyState === "growing" ? 0.005 : -0.005);
+                changePercent += (gameState.economyState === "growing" ? 0.01 : -0.01);
                 
                 // Apply news impact if any
                 const relevantNews = stock.news.filter(n => n.impact === stock.symbol || n.impact.includes(stock.symbol));
@@ -859,21 +972,35 @@
                     changePercent += news.effect;
                 });
                 
-                // Apply random market events (occasionally)
-                if (Math.random() < 0.1) {
-                    const eventSeverity = (Math.random() * 0.1) - 0.05;
+                // Apply random market events (occasionally) - more severe
+                if (Math.random() < 0.15) {
+                    const eventSeverity = (Math.random() * 0.2) - 0.1;
                     changePercent += eventSeverity;
                 }
                 
+                // Random sharp movements (crashes or spikes)
+                if (Math.random() < 0.05) {
+                    const sharpMove = Math.random() < 0.5 ? -0.25 : 0.25;
+                    changePercent += sharpMove;
+                }
+                
                 // Calculate new price with bounds checking
-                stock.price = Math.max(1, stock.price * (1 + changePercent));
+                stock.price = Math.max(0.01, stock.price * (1 + changePercent));
                 stock.previousPrice = previousPrice;
                 
                 // Update history
                 gameState.history[stock.symbol].push(stock.price);
                 stock.history.push(stock.price);
                 if (stock.history.length > 100) stock.history.shift();
+                
+                // Clear old news
+                stock.news = [];
             });
+            
+            // Update market history
+            const marketChange = calculateMarketChange();
+            gameState.marketHistory.push(100 + marketChange);
+            if (gameState.marketHistory.length > 50) gameState.marketHistory.shift();
             
             // Generate news
             if (Math.random() < 0.3) {
@@ -887,23 +1014,93 @@
             
             // Update UI
             updateUI();
+            
+            // Update market chart
+            updateMarketChart();
+        }
+
+        // Trigger a random market event
+        function triggerRandomEvent() {
+            const event = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+            gameState.eventActive = true;
+            gameState.eventType = event.type;
+            gameState.eventDuration = 2 + Math.floor(Math.random() * 3); // 2-4 days
+            
+            // Apply the event effect
+            if (event.impact === "market") {
+                gameState.stocks.forEach(stock => {
+                    stock.news.push(event);
+                });
+            } else if (event.impact === "random") {
+                // Apply to a random stock
+                const randomStock = gameState.stocks[Math.floor(Math.random() * gameState.stocks.length)];
+                randomStock.news.push(event);
+            } else if (Array.isArray(event.impact)) {
+                event.impact.forEach(symbol => {
+                    const stock = gameState.stocks.find(s => s.symbol === symbol);
+                    if (stock) stock.news.push(event);
+                });
+            } else {
+                const stock = gameState.stocks.find(s => s.symbol === event.impact);
+                if (stock) stock.news.push(event);
+            }
+            
+            // Show event banner
+            const banner = document.getElementById('event-banner');
+            banner.textContent = `MARKET EVENT: ${event.text}`;
+            banner.className = `event-banner event-${event.type}`;
+            banner.style.display = 'block';
+            
+            // Add to news
+            gameState.news.unshift({
+                text: event.text,
+                impact: event.impact,
+                effect: event.effect,
+                time: `Day ${gameState.day}`,
+                type: event.type
+            });
+            
+            // Limit news to 10 items
+            if (gameState.news.length > 10) {
+                gameState.news.pop();
+            }
+            
+            // Update news display
+            renderNews();
         }
 
         // Update market conditions
         function updateMarketConditions() {
-            // Randomly change market conditions occasionally
-            if (Math.random() < 0.1) {
+            // Randomly change market conditions more frequently
+            if (Math.random() < 0.2) {
                 const trends = ["bullish", "bearish", "neutral"];
                 gameState.marketTrend = trends[Math.floor(Math.random() * trends.length)];
             }
             
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.2) {
                 const economies = ["growing", "recession", "stable"];
                 gameState.economyState = economies[Math.floor(Math.random() * economies.length)];
             }
             
-            if (Math.random() < 0.15) {
-                gameState.volatility = 0.03 + Math.random() * 0.07;
+            if (Math.random() < 0.25) {
+                // More extreme volatility changes
+                gameState.volatility = 0.05 + Math.random() * 0.15;
+                
+                // Update individual stock volatilities
+                gameState.stocks.forEach(stock => {
+                    stock.currentVolatility = stock.baseVolatility * (0.8 + Math.random() * 0.4);
+                });
+            }
+            
+            // Update risk level based on volatility
+            if (gameState.volatility < 0.07) {
+                gameState.riskLevel = "Low";
+            } else if (gameState.volatility < 0.12) {
+                gameState.riskLevel = "Medium";
+            } else if (gameState.volatility < 0.18) {
+                gameState.riskLevel = "High";
+            } else {
+                gameState.riskLevel = "Extreme";
             }
         }
 
@@ -914,7 +1111,8 @@
                 text: event.text,
                 impact: event.impact,
                 effect: event.effect,
-                time: `Day ${gameState.day}`
+                time: `Day ${gameState.day}`,
+                type: event.type
             };
             
             gameState.news.unshift(news);
@@ -924,6 +1122,10 @@
                 gameState.stocks.forEach(stock => {
                     stock.news.push(news);
                 });
+            } else if (event.impact === "random") {
+                // Apply to a random stock
+                const randomStock = gameState.stocks[Math.floor(Math.random() * gameState.stocks.length)];
+                randomStock.news.push(news);
             } else if (Array.isArray(event.impact)) {
                 event.impact.forEach(symbol => {
                     const stock = gameState.stocks.find(s => s.symbol === symbol);
@@ -970,11 +1172,18 @@
                 
                 const stockItem = document.createElement('div');
                 stockItem.className = 'stock-item';
+                
+                // Add special class for large moves
+                let changeClass = change >= 0 ? 'positive' : 'negative';
+                if (Math.abs(change) > 10) {
+                    changeClass = Math.abs(change) > 20 ? 'crash' : 'rally';
+                }
+                
                 stockItem.innerHTML = `
                     <div class="stock-symbol">${stock.symbol}</div>
                     <div>${stock.name}</div>
                     <div class="stock-price">$${stock.price.toFixed(2)}</div>
-                    <div class="stock-change ${change >= 0 ? 'positive' : 'negative'}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</div>
+                    <div class="stock-change ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</div>
                     <div class="action-buttons">
                         <button class="btn-buy" data-symbol="${stock.symbol}">Buy</button>
                         <button class="btn-info" data-symbol="${stock.symbol}">Info</button>
@@ -1026,17 +1235,20 @@
             
             // Update market indicators
             document.getElementById('volatility-index').textContent = 
-                gameState.volatility < 0.04 ? "Low" : gameState.volatility < 0.07 ? "Medium" : "High";
-            document.getElementById('volatility-progress').style.width = `${gameState.volatility * 1000}%`;
-            document.getElementById('volatility-progress').className = `progress ${gameState.volatility < 0.05 ? 'positive' : 'negative'}`;
+                gameState.volatility < 0.07 ? "Low" : gameState.volatility < 0.12 ? "Medium" : gameState.volatility < 0.18 ? "High" : "Extreme";
+            document.getElementById('volatility-progress').style.width = `${gameState.volatility * 500}%`;
+            document.getElementById('volatility-progress').className = `progress ${gameState.volatility < 0.07 ? 'positive' : gameState.volatility < 0.12 ? '' : 'negative'}`;
             
             document.getElementById('market-trend').textContent = gameState.marketTrend.charAt(0).toUpperCase() + gameState.marketTrend.slice(1);
             document.getElementById('trend-progress').style.width = gameState.marketTrend === "bullish" ? "70%" : gameState.marketTrend === "bearish" ? "30%" : "50%";
             document.getElementById('trend-progress').className = `progress ${gameState.marketTrend === "bullish" ? "positive" : gameState.marketTrend === "bearish" ? "negative" : ""}`;
             
-            document.getElementById('economy-state').textContent = gameState.economyState.charAt(0).toUpperCase() + gameState.economyState.slice(1);
-            document.getElementById('economy-progress').style.width = gameState.economyState === "growing" ? "80%" : gameState.economyState === "recession" ? "30%" : "50%";
-            document.getElementById('economy-progress').className = `progress ${gameState.economyState === "growing" ? "positive" : gameState.economyState === "recession" ? "negative" : ""}`;
+            document.getElementById('risk-level').textContent = gameState.riskLevel;
+            document.getElementById('risk-progress').style.width = 
+                gameState.riskLevel === "Low" ? "25%" : 
+                gameState.riskLevel === "Medium" ? "50%" : 
+                gameState.riskLevel === "High" ? "75%" : "100%";
+            document.getElementById('risk-progress').className = `progress ${gameState.riskLevel === "Low" ? "positive" : gameState.riskLevel === "Medium" ? "" : "negative"}`;
             
             // Update stock list
             renderStocks();
@@ -1058,6 +1270,18 @@
             
             if (totalPrevValue === 0) return 0;
             return (totalCurrentValue - totalPrevValue) / totalPrevValue * 100;
+        }
+
+        // Calculate overall market change
+        function calculateMarketChange() {
+            let totalChange = 0;
+            gameState.stocks.forEach(stock => {
+                if (gameState.history[stock.symbol].length > 1) {
+                    const prevPrice = gameState.history[stock.symbol][gameState.history[stock.symbol].length - 2];
+                    totalChange += (stock.price - prevPrice) / prevPrice * 100;
+                }
+            });
+            return totalChange / gameState.stocks.length;
         }
 
         // Update portfolio display
@@ -1109,7 +1333,39 @@
             // Create chart in modal
             createModalChart(stock);
             
+            // Update risk assessment
+            updateRiskAssessment();
+            
             modal.style.display = 'flex';
+        }
+
+        // Update risk assessment
+        function updateRiskAssessment() {
+            const symbol = document.getElementById('modal-confirm-btn').getAttribute('data-symbol');
+            const type = document.getElementById('modal-confirm-btn').getAttribute('data-trade-type');
+            const shares = parseInt(document.getElementById('shares-input').value) || 0;
+            
+            if (type === 'buy') {
+                const stock = gameState.stocks.find(s => s.symbol === symbol);
+                const investment = shares * stock.price;
+                const portfolioPercent = investment / (gameState.cash + gameState.portfolioValue);
+                
+                let riskMessage = "";
+                if (portfolioPercent > 0.2) {
+                    riskMessage = `⚠️ High Risk: You're investing ${(portfolioPercent * 100).toFixed(1)}% of your portfolio in a single stock!`;
+                } else if (portfolioPercent > 0.1) {
+                    riskMessage = `⚠️ Medium Risk: You're investing ${(portfolioPercent * 100).toFixed(1)}% of your portfolio in this stock.`;
+                } else {
+                    riskMessage = `✅ Low Risk: This investment represents ${(portfolioPercent * 100).toFixed(1)}% of your portfolio.`;
+                }
+                
+                riskMessage += `<br>Stock volatility: ${(stock.currentVolatility * 100).toFixed(1)}%`;
+                riskMessage += `<br>Overall market risk: ${gameState.riskLevel}`;
+                
+                document.getElementById('risk-assessment').innerHTML = riskMessage;
+            } else {
+                document.getElementById('risk-assessment').innerHTML = "Selling shares reduces your exposure to this stock's volatility.";
+            }
         }
 
         // Create chart for modal
@@ -1135,7 +1391,7 @@
                         backgroundColor: 'rgba(41, 98, 255, 0.1)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.3
+                        tension: 0.1
                     }]
                 },
                 options: {
@@ -1172,6 +1428,69 @@
                     }
                 }
             });
+        }
+
+        // Create market chart
+        function createMarketChart() {
+            const ctx = document.getElementById('market-chart').getContext('2d');
+            
+            const chartData = gameState.marketHistory;
+            const labels = chartData.map((_, i) => i + 1);
+            
+            window.marketChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Market Index',
+                        data: chartData,
+                        borderColor: '#2962ff',
+                        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Market Performance Index',
+                            color: '#e5e7eb'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update market chart
+        function updateMarketChart() {
+            if (window.marketChart) {
+                window.marketChart.data.labels = gameState.marketHistory.map((_, i) => i + 1);
+                window.marketChart.data.datasets[0].data = gameState.marketHistory;
+                window.marketChart.update();
+            }
         }
 
         // Update total cost in trade modal
@@ -1234,8 +1553,8 @@
             document.getElementById('info-stock-symbol').textContent = `${symbol} - ${stock.name}`;
             document.getElementById('info-stock-description').textContent = getStockDescription(symbol);
             document.getElementById('info-stock-sector').textContent = stock.sector;
-            document.getElementById('info-stock-volatility').textContent = `${(stock.volatility * 100).toFixed(1)}%`;
-            document.getElementById('info-stock-cap').textContent = stock.marketCap;
+            document.getElementById('info-stock-volatility').textContent = `${(stock.currentVolatility * 100).toFixed(1)}%`;
+            document.getElementById('info-stock-risk').textContent = stock.risk;
             
             // Create charts
             createStockChart(stock);
@@ -1256,13 +1575,13 @@
         // Get stock description
         function getStockDescription(symbol) {
             const descriptions = {
-                "TECH": "A leading technology company specializing in innovative software and hardware solutions. Known for its cutting-edge research and development in AI, cloud computing, and consumer electronics.",
-                "GREEN": "A renewable energy company focused on solar and wind power solutions. Positioned for growth in the transition to clean energy with expanding operations in North America and Europe.",
-                "MEDI": "A pharmaceutical company developing treatments for various medical conditions. Has a strong pipeline of new drugs in development and consistent revenue from established products.",
-                "AUTO": "An automotive company pioneering electric and autonomous vehicles. Investing heavily in future mobility solutions with several new models scheduled for release next year.",
-                "RETL": "A large retail chain with stores across the country. Facing competition from online retailers but adapting with e-commerce initiatives and experiential retail locations.",
-                "BANK": "A global financial services group offering banking, investment, and insurance products. Strong presence in consumer banking and corporate finance with international operations.",
-                "OIL": "An integrated energy company with operations in oil exploration, production, and refining. Facing transition challenges but maintaining strong cash flow from existing assets."
+                "TECH": "A leading technology company specializing in innovative software and hardware solutions. Known for its cutting-edge research and development in AI, cloud computing, and consumer electronics. HIGH VOLATILITY - Tech stocks can experience rapid price swings based on product announcements and market sentiment.",
+                "GREEN": "A renewable energy company focused on solar and wind power solutions. Positioned for growth in the transition to clean energy with expanding operations in North America and Europe. VERY HIGH VOLATILITY - Energy stocks are sensitive to policy changes and commodity prices.",
+                "MEDI": "A pharmaceutical company developing treatments for various medical conditions. Has a strong pipeline of new drugs in development and consistent revenue from established products. MEDIUM VOLATILITY - Healthcare stocks can be affected by regulatory decisions and clinical trial results.",
+                "AUTO": "An automotive company pioneering electric and autonomous vehicles. Investing heavily in future mobility solutions with several new models scheduled for release next year. HIGH VOLATILITY - Auto stocks are cyclical and sensitive to economic conditions.",
+                "RETL": "A large retail chain with stores across the country. Facing competition from online retailers but adapting with e-commerce initiatives and experiential retail locations. VERY HIGH VOLATILITY - Retail stocks can be highly sensitive to consumer spending trends.",
+                "BANK": "A global financial services group offering banking, investment, and insurance products. Strong presence in consumer banking and corporate finance with international operations. MEDIUM VOLATILITY - Bank stocks are sensitive to interest rate changes and economic conditions.",
+                "OIL": "An integrated energy company with operations in oil exploration, production, and refining. Facing transition challenges but maintaining strong cash flow from existing assets. EXTREME VOLATILITY - Oil stocks can experience wild swings based on geopolitical events and supply-demand dynamics."
             };
             
             return descriptions[symbol] || "No description available.";
@@ -1455,6 +1774,7 @@
             const recentPrices = prices.slice(-10);
             const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
             const volatility = Math.sqrt(recentPrices.map(p => Math.pow(p - avgPrice, 2)).reduce((a, b) => a + b, 0) / recentPrices.length);
+            const volatilityPercent = (volatility / currentPrice) * 100;
             
             // Simple trend (comparing last 5 prices to previous 5)
             const last5 = prices.slice(-5);
@@ -1463,15 +1783,24 @@
             const avgPrev5 = prev5.reduce((a, b) => a + b, 0) / prev5.length;
             const trend = avgLast5 > avgPrev5 ? "Upward" : avgLast5 < avgPrev5 ? "Downward" : "Sideways";
             
+            // Risk assessment based on volatility
+            let riskLevel;
+            if (volatilityPercent < 5) riskLevel = "Low";
+            else if (volatilityPercent < 10) riskLevel = "Medium";
+            else if (volatilityPercent < 15) riskLevel = "High";
+            else riskLevel = "Extreme";
+            
             const indicators = [
                 { name: "Current Price", value: `$${currentPrice.toFixed(2)}` },
                 { name: "Daily Change", value: `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)} (${priceChangePercent >= 0 ? '+' : ''}${priceChangePercent.toFixed(2)}%)`, 
                   type: priceChange >= 0 ? "positive" : "negative" },
-                { name: "Volatility", value: (volatility / currentPrice * 100).toFixed(2) + "%" },
+                { name: "Volatility", value: volatilityPercent.toFixed(2) + "%" },
+                { name: "Risk Level", value: riskLevel, 
+                  type: riskLevel === "Low" ? "positive" : riskLevel === "Medium" ? "" : "negative" },
                 { name: "Short-term Trend", value: trend, 
                   type: trend === "Upward" ? "positive" : trend === "Downward" ? "negative" : "" },
-                { name: "Support Level", value: `$${(currentPrice * 0.95).toFixed(2)}` },
-                { name: "Resistance Level", value: `$${(currentPrice * 1.05).toFixed(2)}` }
+                { name: "Support Level", value: `$${(currentPrice * 0.85).toFixed(2)}` },
+                { name: "Resistance Level", value: `$${(currentPrice * 1.15).toFixed(2)}` }
             ];
             
             indicators.forEach(indicator => {
